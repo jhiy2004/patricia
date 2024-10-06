@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define MAX 50
+#define MAX 51
 
 typedef struct patricia_node{
 	int bit; // Posição do bit que discrimina este nó
@@ -12,9 +12,23 @@ typedef struct patricia_node{
 	struct patricia_node *right; //Subárvore direita
 }PatriciaNode;
 
+void freeNode(PatriciaNode* root){
+	free(root->key);
+	free(root);
+}
+
 unsigned bit(unsigned char *key, int k){
+	int cont=0;
+	while(key[cont] != '\0'){
+		cont++;
+	}
+
+	if(cont*8 < k){
+		return 0;
+	}
+
 	int pos = k / 8;
-	int offset = k - 8*pos;
+	int offset = k % 8;
 
 	return key[pos] >> (sizeof(unsigned char)*8 - 1 - offset) & 1;
 }
@@ -99,56 +113,135 @@ void insertion(PatriciaNode **root, unsigned char* key){
 		tSize++;
 
 	while(bit(key, i) == bit(t->key, i)){
-		if(i >= tSize*8 || i >= keySize*8)
-			break;
 		i++;
 	}
 	(*root)->left = rec_insertion((*root)->left, key, i, *root);
 }
 
+PatriciaNode* findBackPointer(PatriciaNode* root){
+	PatriciaNode* aux = NULL;
+	PatriciaNode* q = NULL;
+
+	if(bit(root->key, root->bit) == 0){
+		q = root->left;
+	}else{
+		q = root->right;
+	}
+
+	if(q == root){
+		return q;
+	}
+
+	while(strcmp(q->key, root->key) != 0){
+		aux = q;
+		if(bit(root->key,q->bit) == 0){
+			q = q->left;
+		}else{
+			q = q->right;
+		}
+	}
+	return aux;
+}
+
 void deletion(PatriciaNode* root, unsigned char* key)
 {
-	printf("Antes\n");
-	PatriciaNode* t = search(root, key);
-	printf("Depois\n");
+	PatriciaNode* p = root->left;
+	PatriciaNode* q = root;
 
-	if(t == NULL)
-		return;
+	int w = root->bit;
 
-	PatriciaNode* z = NULL;
-	PatriciaNode* y = t;
+	while(strcmp(p->key, key) != 0){
+		if(p->bit <= w){
+			break;
+		}
 
-	do
-	{
-		printf("Y-Key: %s\n", y->key);
-		printf("Y-R-Key: %s\n", y->right->key);
-		printf("Y-L-Key: %s\n", y->left->key);
-		z = y;
-		if(bit(key, y->bit) == 1)
-			y = y->right;
-		else
-			y = y->left;
+		q = p;
+		w = p->bit;
+
+		if(bit(key,p->bit) == 0){
+			p = p->left;
+		}else{
+			p = p->right;
+		}
 	}
-	while(y != t);
+
+	if(strcmp(p->key, key) != 0) {
+		printf("Not founded\n");
+		return;
+	}
+
+	//Have one self pointer
+	if(p->left == p || p->right == p){
+
+		if(p->left == p){
+			//Self pointer left
+			if(q->right == p){
+				q->right = p->right;
+			}else{
+				q->left = p->right;
+			}
+		}else{
+			//Self pointer right
+			if(q->right == p){
+				q->right = p->left;
+			}else{
+				q->left = p->left;
+			}
+		}
+
+		freeNode(p);
+
+		return;
+	}
 	
-	//Self-pointer
-	if(t == z)
-		return;
+	//Have zero self pointer
+	PatriciaNode* r = NULL;
+	PatriciaNode* parent = root->left;
+	PatriciaNode* aux = root;
 
-	int keySize = 0;
-	printf("Z-Key: ");
-	while(z->key[keySize] != '\0')
-	{
-		keySize++;
+	//Put in q a pointer whose points back to p
+	q = findBackPointer(p);
+	r = findBackPointer(q);
+
+	//Find the parent of q
+	while(strcmp(parent->key, q->key) != 0){
+		aux = parent;
+
+		if(bit(q->key, parent->bit) == 0){
+			parent = parent->left;
+		}else{
+			parent = parent->right;
+		}
 	}
-	printf("(%s)", z->key);
-	for(int k=0; k < keySize*8; k++)
-	{
-		if(k % 8 == 0 && k != 0)
-			printf(" ");
-		printf("%d", bit(z->key, k));
+	parent = aux;
+
+	if(r->right == q){
+		r->right = p;
+	}else{
+		r->left = p;
 	}
-	printf("\n");
+
+	if(parent->left == q){
+		if(q->left == p){
+			parent->left = q->right;
+		}else{
+			parent->left = q->left;
+		}
+	}else{
+		if(q->left == p){
+			parent->right = q->right;
+		}else{
+			parent->right = q->left;
+		}
+	}
+
+	char* temp = p->key;
+	
+	//Copy to p the value o q
+	p->key = q->key;
+	q->key = temp;
+
+	freeNode(q);
 }
 
 void rec_print(PatriciaNode* root, int w){
@@ -168,8 +261,7 @@ void rec_print(PatriciaNode* root, int w){
 	{
 		if(k % 8 == 0 && k != 0)
 			printf(" ");
-		printf("%d", bit(root->key, k));
-	}
+		printf("%d", bit(root->key, k)); }
 	printf("\n");
 
 	printf("Bit: %d\n\n", root->bit);
@@ -186,18 +278,74 @@ void print(PatriciaNode* root){
 	rec_print(root->left, root->bit);
 }
 
+int menu(){
+	int opc = 0;
+	do{
+		printf("=====================================\n");
+		printf("=           Patricia Trie           =\n");
+		printf("=====================================\n");
+		printf("= 1 - Insert a new word (MAX=50)    =\n");
+		printf("= 2 - Remove  word                  =\n");
+		printf("= 3 - Print patricia trie           =\n");
+		printf("= 4 - Exit                          =\n");
+		printf("=====================================\n");
+		printf("Enter your option: ");
+		scanf("%d", &opc);
+	}while(opc < 1 || opc > 4);
+
+	return opc;
+}
+
 int main(){
+	int opc = 0;
 	PatriciaNode* root = (PatriciaNode*)malloc(sizeof(PatriciaNode));
+	char name[MAX];
 
 	initialize(&root);
 
+	while(1){
+		opc = menu();
+
+		getchar();
+
+		switch(opc){
+			case 1:
+				printf("Enter the word to be inserted: ");
+
+				fgets(name, MAX, stdin);
+				name[strcspn(name, "\n")] = '\0';
+
+				insertion(&root, name);
+				break;
+
+			case 2:
+				printf("Enter the word to be deleted: ");
+
+				fgets(name, MAX, stdin);
+				name[strcspn(name, "\n")] = '\0';
+
+				deletion(root, name);
+				break;
+			case 3:
+				print(root);
+				break;
+			case 4:
+				return 0;
+				break;
+		}
+	}
+
+	/*
 	insertion(&root, "opa");
 	insertion(&root, "opanda");
 	insertion(&root, "opanba");
 	insertion(&root, "obesilisco");
-	insertion(&root, "caule");
-	insertion(&root, "antena");
+	insertion(&root, "horta");
+	insertion(&root, "obra");
+
+	deletion(root, "obesilisco");
 	
 	print(root);
+	*/
 	return 0;
 }
