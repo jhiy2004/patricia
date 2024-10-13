@@ -296,12 +296,49 @@ int menu(){
 	return opc;
 }
 
-int main(){
+void pause(){
+	printf("\nDigite qualquer tecla para prosseguir...");
+	getchar();
+	system("clear");
+}
+
+void test(PatriciaNode** root){
+	char *words[] = {"opa", "opanda", "opanba", "obesilisco", "horta", "obra"};
+	int lengthWords = 6;
+
+	char delIndexes[] = {4, 1, 2};
+	int lengthDelIndexes = 3;
+
+	for(int i=0; i < lengthWords; i++){
+		printf(">_ Inserindo '%s'\n", words[i]);
+		insertion(root, words[i]);
+		print(*root);
+
+		pause();
+	}
+
+	for(int i=0; i < lengthDelIndexes; i++){
+		printf(">_ Removendo '%s'\n", words[i]);
+		deletion(*root, words[i]);
+		print(*root);
+
+		pause();
+	}
+}
+
+int main(int argc, char *argv[]){
 	int opc = 0;
 	PatriciaNode* root = (PatriciaNode*)malloc(sizeof(PatriciaNode));
 	char name[MAX];
 
 	initialize(&root);
+
+	if(argc > 1){
+		if(strcmp(argv[1],"test") == 0){
+			test(&root);
+			return 0;
+		}
+	}
 
 	while(1){
 		opc = menu();
