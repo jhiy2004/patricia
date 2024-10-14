@@ -300,6 +300,37 @@ void print(PatriciaNode* root){
 	rec_print(root->left, 0, root->bit);
 }
 
+void det_rec_print(PatriciaNode* root, int w){
+	if(root->bit <= w){
+		return;
+	}
+	int keySize=0;
+	printf("Key: ");
+	while(root->key[keySize] != '\0')
+	{
+		keySize++;
+	}
+	printf("(%s)", root->key);
+	for(int k=0; k < keySize*8; k++)
+	{
+		if(k % 8 == 0 && k != 0)
+			printf(" ");
+		printf("%d", bit(root->key, k));
+	}
+	printf("\n");
+	printf("Bit: %d\n\n", root->bit);
+
+	printf("Left: %s\n", root->left->key);
+	det_rec_print(root->left, root->bit);
+
+	printf("Right: %s\n", root->right->key);
+	det_rec_print(root->right, root->bit);
+}
+void det_print(PatriciaNode* root){
+	printf("Dummy Left: \n");
+	det_rec_print(root->left, root->bit);
+}
+
 int menu(){
 	int opc = 0;
 	do{
@@ -331,12 +362,12 @@ void pause(){
 
 void test(PatriciaNode** root){
 	// Lista de palavras contidas na árvore patricia
-	char *words[] = {"opa", "opanda", "opanba", "obesilisco", "horta", "obra"};
-	int lengthWords = 6;
+	char *words[] = {"cachorro", "gato", "pato", "pavao", "cachorrinho", "gato2", "gato3", "gato4", "cachorrinho2"};
+	int lengthWords = 9;
 
 	// Lista de índices referentes a palavras do vetor words que serão removidas da árvore patricia
-	char delIndexes[] = {4, 1, 2};
-	int lengthDelIndexes = 3;
+	char delIndexes[] = {1, 0, 5, 6, 3, 8};
+	int lengthDelIndexes = 6;
 
 	for(int i=0; i < lengthWords; i++){
 		printf(">_ Inserindo '%s'\n", words[i]);
