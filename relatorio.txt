@@ -1,0 +1,54 @@
+void freeNode(PatriciaNode* root) -> Essa função tem como finalidade liberar um nó da memória.
+
+unsigned bit(unsigned char *key, int k) -> Essa função retorna o valor do bit na posição k de uma string,
+caso a string não tenha k bits, será retornado 0.
+
+void initialize(PatriciaNode** root) -> Essa função inicializa o nó raiz da árvore com 50 caracteres de
+tamanho, onde todos os bits possuem valor 1.
+
+PatriciaNode* rec_search(PatriciaNode* root, unsigned char* x, int w) -> Essa função faz uma busca recursiva
+por uma palavra na árvore, e retornará o nó que contém a palavra, ou o nó que possui a palavra com o prefixo
+mais semelhante.
+
+PatriciaNode* search(PatriciaNode* root, unsigned char* x) -> Faz uma chamada por rec_search e verifica se
+o nó retornado por ela é de fato a palavra a ser buscada, caso for retorne o nó que possui a palavra, caso
+contrário retorna NULL.
+
+PatriciaNode* rec_insertion(PatriciaNode* root, unsigned char* key, int w, PatriciaNode* father) -> Encontra
+o ponto em que será inserido a palavra e então o insere.
+
+int insertion(PatriciaNode **root, unsigned char* key) -> Verifica se o temanaho da palavra é menor que 50
+caracteres, caso não seja retorna 0, caso contrário verifica se já existe a palavra a ser inserida na
+árvore, caso não exista ele chama rec_insertion para inserir a palavra na árvore e depois retorna 1, caso
+contrário retorna 0.
+
+PatriciaNode* findBackPointer(PatriciaNode* root) -> Essa função retorna um nó da árvore que aponta de volta
+para o nó informado no root.
+
+int deletion(PatriciaNode* root, unsigned char* key) -> Essa função faz uma remoção de um nó que contenha a
+palavra informada em key, caso exista ele poderá cair em 2 casos principais, um em que o nó a ser removido
+tem um ponteiro que aponta para si mesmo, e o outro onde não existe ponteiro que aponta para si mesmo. A
+função retorna 1 se conseguiu realizar a remoção e retorna 0 caso contrário.
+
+void rec_print(PatriciaNode *root, int level, int w) -> Faz a impressão de forma recursiva a partir do root.
+Essa impressão possui o seguinte formato:
+
+     -> key2 | bit
+-> key | bit
+	      -> key3 | bit
+     -> key1 | bit
+
+Onde cada nó é representado por sua chave e seu bit, que são separados por um '|', e seus filhos possuem
+uma identação de 5 espaços em relação ao pai, portanto nesse exemplo key1 é filhos da esquerda de key,
+e key 2 é fiho da direita de key, e key3 é filho da direita de key1.
+
+void print(PatriciaNode* root) -> Caso a árvore não esteja vazia, isto é, com apenas o nó dummy, será
+chamada rec_print para imprimir recursivamente todos os nós a esquerda do nó dummy.
+
+Existem duas maneiras de rodar este código, com "./main" sem nenhum argumento, ou com "./main test".
+
+./main: Exibe um menu com as ações disponíveis: inserção, remoção, busca e impressão, além da opção de encerrar
+o programa.
+
+./main test: Executa um conjunto de testes, inserindo e removendo valores para verificar o comportamento
+da árvore, sem exibir o menu.

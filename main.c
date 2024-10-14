@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define MAX 51
+#define MAX 50
 
 typedef struct patricia_node{
 	int bit; // Posição do bit que discrimina este nó
@@ -118,21 +118,24 @@ PatriciaNode* rec_insertion(PatriciaNode* root, unsigned char* key, int w, Patri
 	return root;
 }
 
-void insertion(PatriciaNode **root, unsigned char* key){
+int insertion(PatriciaNode **root, unsigned char* key){
 	int i=0;
+	int keySize = 0;
+	int tSize = 0;
+
+	while(key[keySize] != '\0')
+		keySize++;
+
+	if(keySize > MAX){
+		return 0;
+	}
 	//Faz uma busca para encontrar o nó mais próximo de key
 	PatriciaNode* t = rec_search((*root)->left, key, -1);
 
 	//Caso tenha encontrado key na árvore, retorna o controle de volta ao chamador
-	if(key == t->key)
-		return;
+	if(strcmp(key, t->key) == 0)
+		return 0;
 
-	int tSize = 0;
-	int keySize = 0;
-
-	while(key[keySize] != '\0')
-		keySize++;
-	
 	while(t->key[tSize] != '\0')
 		tSize++;
 
@@ -142,6 +145,7 @@ void insertion(PatriciaNode **root, unsigned char* key){
 		i++;
 	}
 	(*root)->left = rec_insertion((*root)->left, key, i, *root);
+	return 1;
 }
 
 PatriciaNode* findBackPointer(PatriciaNode* root){
@@ -170,8 +174,7 @@ PatriciaNode* findBackPointer(PatriciaNode* root){
 	return aux;
 }
 
-void deletion(PatriciaNode* root, unsigned char* key)
-{
+int deletion(PatriciaNode* root, unsigned char* key){
 	//p é o nó que contém a chave a ser removida
 	PatriciaNode* p = root->left;
 	PatriciaNode* q = root;
@@ -195,8 +198,7 @@ void deletion(PatriciaNode* root, unsigned char* key)
 	}
 
 	if(strcmp(p->key, key) != 0) {
-		printf("Not founded\n");
-		return;
+		return 0;
 	}
 
 	//Tem um ponteiro que aponta para si mesmo
@@ -221,7 +223,7 @@ void deletion(PatriciaNode* root, unsigned char* key)
 		// Remove o nó p
 		freeNode(p);
 
-		return;
+		return 1;
 	}
 	
 	//Não há ponteiro que aponta para si mesmo
@@ -278,17 +280,23 @@ void deletion(PatriciaNode* root, unsigned char* key)
 
 	//Remove da memória o nó q
 	freeNode(q);
+
+	return 1;
 }
 // Função para imprimir a árvore
 void rec_print(PatriciaNode *root, int level, int w) {
 	if(root != NULL && root->bit > w) {
 		rec_print(root->right, level+1, root->bit);
-		printf("%*s-> %s | %d\n", level*4, "", root->key, root->bit);
+		printf("%*s-> %s | %d\n", level*5, "", root->key, root->bit);
 		rec_print(root->left, level+1, root->bit);
 	}
 }
 
 void print(PatriciaNode* root){
+	if(root->left == root){
+		printf("Empty\n");
+		return;
+	}
 	rec_print(root->left, 0, root->bit);
 }
 
@@ -305,7 +313,11 @@ int menu(){
 		printf("= 5 - Exit                          =\n");
 		printf("=====================================\n");
 		printf("Enter your option: ");
-		scanf("%d", &opc);
+		
+		if(scanf("%d", &opc) == 0){
+			while(getchar() != '\n');
+			opc = 0;
+		}
 	}while(opc < 1 || opc > 5);
 
 	return opc;
@@ -360,7 +372,7 @@ void test(PatriciaNode** root){
 int main(int argc, char *argv[]){
 	int opc = 0;
 	PatriciaNode* root = (PatriciaNode*)malloc(sizeof(PatriciaNode));
-	char name[MAX];
+	char name[1000];
 
 	initialize(&root);
 
@@ -380,24 +392,32 @@ int main(int argc, char *argv[]){
 			case 1:
 				printf("Enter the word to be inserted: ");
 
-				fgets(name, MAX, stdin);
+				fgets(name, 1000, stdin);
 				name[strcspn(name, "\n")] = '\0';
 
-				insertion(&root, name);
+				if(insertion(&root, name) == 1){
+					printf("'%s' inserted", name);
+				}else{
+					printf("'%s' not inserted",name);
+				}
 				break;
 
 			case 2:
 				printf("Enter the word to be deleted: ");
 
-				fgets(name, MAX, stdin);
+				fgets(name, 1000, stdin);
 				name[strcspn(name, "\n")] = '\0';
 
-				deletion(root, name);
+				if(deletion(root, name) == 1){
+					printf("'%s' deleted", name);
+				}else{
+					printf("'%s' not deleted",name);
+				}
 				break;
 			case 3:
 				printf("Enter the word to be searched: ");
 
-				fgets(name, MAX, stdin);
+				fgets(name, 1000, stdin);
 				name[strcspn(name, "\n")] = '\0';
 
 				if(search(root,name) != NULL){
